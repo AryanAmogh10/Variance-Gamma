@@ -1,2 +1,9 @@
 data
 __pycache__
+
+# Large data files (hosted on Kaggle, not in git)
+*.csv
+*.parquet
+fo_history/
+NIFTY_options.*
+BANKNIFTY_options.*
