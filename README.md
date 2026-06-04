@@ -37,7 +37,9 @@ Daily OHLC / settle / open-interest for **every NIFTY and BANK NIFTY option**
 | NIFTY 50  | 04-Jun-2001 → present |
 | BANK NIFTY | 13-Jun-2005 → present |
 
-📦 **Download on Kaggle:** _[add your Kaggle dataset link here]_
+📦 **Download on Kaggle:**
+https://www.kaggle.com/datasets/amogharyan10/nifty-daily-options-data-apr-2026
+https://www.kaggle.com/datasets/amogharyan10/banknifty-daily-options-data-jun-2026
 
 The data files are **not** stored in this repo (they're large) — grab them from
 Kaggle and drop `NIFTY_options.csv` / `BANKNIFTY_options.csv` in the repo root.
