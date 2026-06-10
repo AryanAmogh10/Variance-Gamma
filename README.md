@@ -62,6 +62,10 @@ bhavcopy archives for the earliest years).
 | `overfit_check.py` | Out-of-sample / multi-day robustness validation |
 | `backtest.py`   | Daily delta-hedging simulation across history |
 | `_selftest.py`  | Correctness checks (martingale, put–call parity, VG→BSM limit) |
+| `config.py`     | Central configuration (bump sizes, FFT, hedging, market params) |
+| `greeks.py`     | Vectorised VG Greeks (delta, vega, volga, vanna, theta) + surface visualiser |
+| `hedging.py`    | Monte-Carlo delta-hedging simulator (GBM & VG paths, VG vs BSM delta) |
+| `run_analysis.py` | Generates all Greeks/hedging figures and summary stats |
 
 ---
 
@@ -98,6 +102,56 @@ python overfit_check.py NIFTY 40
 
 ---
 
+## Greeks & Hedging
+
+The engine includes a full **Greeks suite** and a **delta-hedging simulator**
+(see `research_memo.md` for the complete study).
+
+**Greeks** (`vg_engine/greeks.py`) — delta, vega, volga, vanna and theta via
+central finite differences on the FFT pricer, with adaptive bump sizes from a
+central config. The FFT prices a whole strike chain per pass, so a full
+strike × tenor Greeks surface costs only ~11 FFT passes per tenor. Validated
+by 17 unit tests: sign conventions, dividend-adjusted delta parity
+(Δ_C − Δ_P = e^(−qT)), vega/volga/vanna call–put parity, bump-refinement
+stability, and exact convergence to the closed-form Black-Scholes delta in the
+Brownian limit.
+
+**Hedging simulator** (`vg_engine/hedging.py`) — shorts an ATM call and
+delta-hedges daily with 2 bps transaction costs along 1,000 GBM and 1,000 VG
+Monte-Carlo paths, hedging with either the VG delta or the BSM delta at
+implied vol. Deltas are precomputed on spot × time lattices and interpolated,
+so the full 2×2 experiment runs in minutes. The P&L accounting (premium
+accretion at r, financing, daily dividend crediting at q) is verified
+bias-free: with costs off, the mean hedge error is statistically zero;
+with costs on, the drag is ~13 points (≈2.6% of premium) per 30-day episode.
+
+Headline finding: under fat-tailed VG dynamics, hedging-error dispersion is
+~4–5× larger than under GBM *regardless of the hedge ratio* — jump risk is
+structurally unhedgeable with the underlying alone, so the VG model's edge
+lives in pricing and risk measurement rather than vanilla replication.
+
+**Full write-ups:**
+- [`research_memo.md`](research_memo.md) — the complete study (methodology,
+  results, trading implications, limitations)
+- [`validation_report.md`](validation_report.md) — every number explicit for
+  external review (configs, error distributions, Greeks tables, parity
+  checks to 1e-14, verbatim test output)
+- [`figures/`](figures) — Greeks surfaces, hedging-error distributions,
+  P&L confidence bands, delta-gap trajectories
+
+```bash
+# run the test suite (26 tests)
+python -m pytest tests/ -v
+
+# regenerate all figures + stats (figures/, seeded & reproducible)
+cd vg_engine && python run_analysis.py
+
+# regenerate the validation report
+cd vg_engine && python make_validation_report.py
+```
+
+---
+
 ## Model
 
 Risk-neutral Variance-Gamma (Madan–Carr–Chang, 1998):
@@ -116,6 +170,6 @@ constraint `1 − θν − ½σ²ν > 0`.
 ## Roadmap
 
 - Walk-forward calibration producing a full historical parameter time series
-- VG Greeks via FFT differentiation
+- Minimum-variance (variance-optimal) hedge ratios under VG
 - Broader Lévy family (NIG, CGMY) and a VG–GARCH hybrid
 - VaR / Expected-Shortfall tail-risk backtesting

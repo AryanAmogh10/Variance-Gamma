@@ -5,3 +5,4 @@ pyarrow>=14.0
 matplotlib>=3.7
 yfinance>=0.2
 requests>=2.31
+pytest>=8.0
