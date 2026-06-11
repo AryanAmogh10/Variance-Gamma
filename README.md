@@ -130,6 +130,40 @@ Headline finding: under fat-tailed VG dynamics, hedging-error dispersion is
 structurally unhedgeable with the underlying alone, so the VG model's edge
 lives in pricing and risk measurement rather than vanilla replication.
 
+### Results
+
+**Pricing: VG vs Black-Scholes on real NSE chains** (27 independent NIFTY
+trading days 2021–2025, held-out strikes — the model is evaluated only on
+strikes it never saw):
+
+| Model | In-sample RMSE | Out-of-sample RMSE | OOS/IS ratio |
+|---|---|---|---|
+| **VG (3 params)** | 17.45 | **17.60** | 1.01 |
+| BSM flat (1 param) | 24.40 | 25.37 | 1.04 |
+
+VG beats flat BSM on **88.9%** of days with a median out-of-sample RMSE
+reduction of **19.5%**, and the ≈1.01 OOS/IS ratio shows it is not overfitting.
+
+**Hedging: terminal error of a daily-rebalanced short ATM call**
+(K = 23700, 30 days, 1,000 Monte-Carlo paths per cell, 2 bps costs,
+index points):
+
+| Hedge / Paths | MAE | Mean | Std | Skew | 5th pct | 95th pct |
+|---|---|---|---|---|---|---|
+| VG delta / GBM paths | 73.9 | −12.1 | 99.2 | −1.19 | −190.4 | 119.0 |
+| BSM delta / GBM paths | 49.7 | −13.3 | 65.5 | +0.01 | −119.3 | 97.1 |
+| VG delta / VG paths | 267.9 | −12.2 | 396.7 | −2.80 | −769.7 | 307.1 |
+| BSM delta / VG paths | 237.7 | −13.7 | 361.4 | −3.01 | −669.3 | 306.0 |
+
+Moving from GBM to VG paths multiplies hedging-error dispersion ~4–5× for
+*both* hedgers, and the VG-path error is heavily left-skewed — the loss tail
+is where the jump risk lives. The ≈ −13 mean is pure transaction-cost drag
+(with costs off the mean error is statistically zero).
+
+**Calibrated VG parameters** (mean ± std across the 27 days): σ = 0.133 ± 0.029,
+θ = −0.150 ± 0.092, ν = 0.114 ± 0.074 — persistently negative θ (skew) and
+positive ν (fat tails), confirming both effects are structural in NIFTY options.
+
 **Full write-ups:**
 - [`research_memo.md`](research_memo.md) — the complete study (methodology,
   results, trading implications, limitations)
